@@ -56,50 +56,8 @@ function App() {
     setContractAddress(value);
   };
   const contractClick = async () => {
-    console.log(contactAddress);
-    const contract = new web3.eth.Contract(
-      [
-        {
-          inputs: [],
-          name: "add",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "minus",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "startCount",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "nonpayable",
-          type: "constructor",
-        },
-        {
-          inputs: [],
-          name: "count",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-      ],
-      contactAddress
-    );
+    const abi: any = CounterABI;
+    const contract = new web3.eth.Contract(abi, contactAddress);
     const count = await contract.methods.count().call();
     setCount(count);
   };
@@ -124,6 +82,7 @@ function App() {
           <button onClick={ClickBalanceOf}>Balance ?{balance} </button>
         )}
         <HR />
+        
         <H1>3. Import Contract to count</H1>
         Contract Address ={" "}
         <input
@@ -132,7 +91,7 @@ function App() {
           onChange={inputContract}
           value={contactAddress}
         />
-        <button onClick={contractClick}>contact Input </button>
+        <button onClick={contractClick}>contract Input </button>
         {count}
       </header>
     </div>
