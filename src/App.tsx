@@ -24,6 +24,7 @@ function App() {
   const [balance, setBalance] = useState<string>("");
   const [contactAddress, setContractAddress] = useState<string>("");
   const [count, setCount] = useState<number>(0);
+  const [sendAddress, setSendAddress] = useState<string>("")
   const web3 = new Web3(INFURA_URL);
 
   const clickBtn = () => {
@@ -61,6 +62,16 @@ function App() {
     const count = await contract.methods.count().call();
     setCount(count);
   };
+  const sendSignInput = (e: React.ChangeEvent<HTMLInputElement>) =>{
+    const { value } = e.target;
+    setSendAddress(value)
+  }
+  const sendSignClick = () =>{
+    const tx = {
+      
+    }
+    web3.eth.sendSignedTransaction("sss",tx)
+  }
   return (
     <div className="App">
       <header className="App-header">
@@ -93,6 +104,16 @@ function App() {
         />
         <button onClick={contractClick}>contract Input </button>
         {count}
+
+        <H1>4. SendSignTransaction</H1>
+        Send Target Address
+        <input
+          name="contract"
+          type={"text"}
+          onChange={sendSignInput}
+          value={sendAddress}
+        />
+        <button onClick={contractClick}>contract Input </button>
       </header>
     </div>
   );
