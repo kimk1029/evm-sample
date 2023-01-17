@@ -5,6 +5,7 @@ import CounterABI from "./abi.json";
 import styled from "styled-components";
 import { Transaction } from "@ethereumjs/tx";
 import { Chain, Common } from "@ethereumjs/common";
+
 import { Buffer } from "buffer";
 
 const HR = styled.hr`
@@ -24,25 +25,21 @@ const InputWithLabel = styled.div`
   align-items: center;
   width: 500px;
 `;
-// Address : 0x394662298bFC044771245B07027CdbaA391F052f
-
-// Key : 0xabbaf5008e9323151e1b578205aed5477c7a1290fcabc6c62a006ea0ec4acfb4
+//0xaa8e7bb85e5abec0a0567ced64a54080430b95445d547055d8cd87c4b3e4afab
 const INFURA_URL =
   "https://goerli.infura.io/v3/e839e4099dba4eb189fab5aeade0dfea";
 function App() {
-  useEffect(() => {
-    // @ts-ignore
-    window.Buffer = Buffer;
-  }, []);
   const [address, setAddress] = useState<string>("");
   const [pk, setPk] = useState<string>(
-    "0xabbaf5008e9323151e1b578205aed5477c7a1290fcabc6c62a006ea0ec4acfb4"
+    "0xaa8e7bb85e5abec0a0567ced64a54080430b95445d547055d8cd87c4b3e4afab"
   );
   const [balance, setBalance] = useState<string>("");
   const [contactAddress, setContractAddress] = useState<string>("");
   const [count, setCount] = useState<number>(0);
   const [sendAddress, setSendAddress] = useState<string>("");
-  const [toAddress, setToAddress] = useState<string>("");
+  const [toAddress, setToAddress] = useState<string>(
+    "0x9F5230608353116ef5d1941C4803e4516A54e23C"
+  );
   const web3 = new Web3(INFURA_URL);
 
   const clickBtn = () => {
@@ -99,16 +96,13 @@ function App() {
     }
     const { address } = web3.eth.accounts.privateKeyToAccount(pk.substring(2));
     const nonce = await web3.eth.getTransactionCount(address);
-    const privateKey = Buffer.from(
-      "abbaf5008e9323151e1b578205aed5477c7a1290fcabc6c62a006ea0ec4acfb4",
-      "hex"
-    );
+    const privateKey = Buffer.from(pk.substring(2), "hex");
     const txObj = {
       nonce,
       to: toAddress,
-      gasLimit: 100000,
-      gasPrice: 10000,
-      value: web3.utils.toHex(0.1),
+      gasLimit: web3.utils.toHex("21000"),
+      gasPrice: "0x214b76d600", // TODO
+      value: web3.utils.toHex("1"), // TODO : value\
     };
     const common = new Common({
       chain: Chain.Goerli,
@@ -116,14 +110,11 @@ function App() {
     const tx = new Transaction(txObj, { common });
     const signedTx = tx.sign(privateKey);
 
-    const txSerial = tx.serialize();
+    //const txSerial = tx.serialize();
     const txSignedSerial = signedTx.serialize();
-    console.log(txSerial);
-    console.log(txSignedSerial);
-    // await web3.eth.sendSignedTransaction("")
-    // ;
-    // const tx = {};
-    // web3.eth.sendSignedTransaction("sss", tx);
+    web3.eth
+      .sendSignedTransaction("0x" + txSignedSerial.toString("hex"))
+      .on("receipt", (e) => console.log(e));
   };
   return (
     <div className="App">
