@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import Web3 from "web3";
-import CounterABI from "./abi.json";
+import CounterABI from "../src/config/abi.json";
 import styled from "styled-components";
 import { Transaction } from "@ethereumjs/tx";
 import { Chain, Common } from "@ethereumjs/common";
-
-import { Buffer } from "buffer";
+import web3, { getGasprice } from "./config/web3";
 
 const HR = styled.hr`
   width: 80%;
@@ -26,8 +24,6 @@ const InputWithLabel = styled.div`
   width: 500px;
 `;
 //0xaa8e7bb85e5abec0a0567ced64a54080430b95445d547055d8cd87c4b3e4afab
-const INFURA_URL =
-  "https://goerli.infura.io/v3/e839e4099dba4eb189fab5aeade0dfea";
 function App() {
   const [address, setAddress] = useState<string>("");
   const [pk, setPk] = useState<string>(
@@ -40,7 +36,6 @@ function App() {
   const [toAddress, setToAddress] = useState<string>(
     "0x9F5230608353116ef5d1941C4803e4516A54e23C"
   );
-  const web3 = new Web3(INFURA_URL);
 
   const clickBtn = () => {
     const account = web3.eth.accounts.create();
@@ -52,9 +47,7 @@ function App() {
     setPk("");
   };
   const clickPktoAccount = () => {
-    const { address, privateKey } = web3.eth.accounts.privateKeyToAccount(
-      pk.substring(2)
-    );
+    const { address } = web3.eth.accounts.privateKeyToAccount(pk.substring(2));
     if (address) {
       setAddress(address);
     }
@@ -81,10 +74,6 @@ function App() {
     const { value } = e.target;
     setSendAddress(value);
   };
-  const inputFromAddress = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    setSendAddress(value);
-  };
   const inputToAddress = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     setToAddress(value);
@@ -97,6 +86,7 @@ function App() {
     const { address } = web3.eth.accounts.privateKeyToAccount(pk.substring(2));
     const nonce = await web3.eth.getTransactionCount(address);
     const privateKey = Buffer.from(pk.substring(2), "hex");
+    const gasObject = getGasprice();
     const txObj = {
       nonce,
       to: toAddress,
