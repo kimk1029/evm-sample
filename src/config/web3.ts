@@ -7,6 +7,6 @@ export const getGasprice = async () => {
   const response = await (
     await fetch("https://ethgasstation.info/api/ethgasAPI.json")
   ).json();
-  return response;
+  return { fast: response.fast, slow: response.slow };
 };
 export default web3;

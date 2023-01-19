@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { Transaction } from "@ethereumjs/tx";
 import { Chain, Common } from "@ethereumjs/common";
 import web3, { getGasprice } from "./config/web3";
+import { SendSignTransaction } from "./page/SendSignTransaction";
 
 const HR = styled.hr`
   width: 80%;
@@ -25,75 +26,87 @@ const InputWithLabel = styled.div`
 `;
 //0xaa8e7bb85e5abec0a0567ced64a54080430b95445d547055d8cd87c4b3e4afab
 function App() {
-  const [address, setAddress] = useState<string>("");
-  const [pk, setPk] = useState<string>(
-    "0xaa8e7bb85e5abec0a0567ced64a54080430b95445d547055d8cd87c4b3e4afab"
-  );
-  const [balance, setBalance] = useState<string>("");
-  const [contactAddress, setContractAddress] = useState<string>("");
-  const [count, setCount] = useState<number>(0);
-  const [sendAddress, setSendAddress] = useState<string>("");
-  const [toAddress, setToAddress] = useState<string>(
-    "0x9F5230608353116ef5d1941C4803e4516A54e23C"
-  );
+  const INITIAL_STATE = {
+    address: "",
+    pk: "0xaa8e7bb85e5abec0a0567ced64a54080430b95445d547055d8cd87c4b3e4afab",
+    balance: "",
+    contactAddress: "",
+    count: "",
+    sendBalance: "",
+    toAddress: "0x9F5230608353116ef5d1941C4803e4516A54e23C",
+  };
+  const [info, setInfo] = useState({ ...INITIAL_STATE });
+
+  const inputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value, name } = e.target;
+    console.log(value);
+    console.log(name);
+    setInfo({
+      ...info,
+      [name]: value,
+    });
+  };
 
   const clickBtn = () => {
     const account = web3.eth.accounts.create();
-    setAddress(account.address);
-    setPk(account.privateKey);
+    setInfo({
+      ...info,
+      address: account.address,
+      pk: account.privateKey,
+    });
   };
   const clickReset = () => {
-    setAddress("");
-    setPk("");
+    setInfo(INITIAL_STATE);
   };
   const clickPktoAccount = () => {
-    const { address } = web3.eth.accounts.privateKeyToAccount(pk.substring(2));
+    const { address } = web3.eth.accounts.privateKeyToAccount(
+      info.pk.substring(2)
+    );
     if (address) {
-      setAddress(address);
+      setInfo({
+        ...info,
+        address,
+      });
     }
   };
-  const inputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    setPk(value);
-  };
   const ClickBalanceOf = async () => {
-    const balance = await web3.eth.getBalance(address);
-    setBalance(balance);
-  };
-  const inputContract = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    setContractAddress(value);
+    const balance = await web3.eth.getBalance(info.address);
+    setInfo({
+      ...info,
+      balance: balance,
+    });
   };
   const contractClick = async () => {
     const abi: any = CounterABI;
-    const contract = new web3.eth.Contract(abi, contactAddress);
+    const contract = new web3.eth.Contract(abi, info.contactAddress);
     const count = await contract.methods.count().call();
-    setCount(count);
-  };
-  const sendSignInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    setSendAddress(value);
-  };
-  const inputToAddress = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    setToAddress(value);
+    setInfo({
+      ...info,
+      count,
+    });
   };
   const sendSignClick = async () => {
-    if (sendAddress === "") {
-      alert("Blank");
+    if (info.sendBalance === "") {
+      alert("수량을 입력하세요");
       return false;
     }
-    const { address } = web3.eth.accounts.privateKeyToAccount(pk.substring(2));
+    const { address } = web3.eth.accounts.privateKeyToAccount(
+      info.pk.substring(2)
+    );
     const nonce = await web3.eth.getTransactionCount(address);
-    const privateKey = Buffer.from(pk.substring(2), "hex");
-    const gasObject = getGasprice();
+    const privateKey = Buffer.from(info.pk.substring(2), "hex");
+    const gasObject = await getGasprice();
+    const { fast, slow } = gasObject;
+
     const txObj = {
       nonce,
-      to: toAddress,
+      to: info.toAddress,
       gasLimit: web3.utils.toHex("21000"),
-      gasPrice: "0x214b76d600", // TODO
-      value: web3.utils.toHex("1"), // TODO : value\
+      gasPrice: web3.utils.toHex(web3.utils.toWei(fast.toString(), "gwei")),
+      value: web3.utils.toHex(1),
     };
+    console.log(web3.utils.toWei(fast.toString(), "gwei"));
+    console.log(txObj);
     const common = new Common({
       chain: Chain.Goerli,
     });
@@ -106,12 +119,15 @@ function App() {
       .sendSignedTransaction("0x" + txSignedSerial.toString("hex"))
       .on("receipt", (e) => console.log(e));
   };
+  const contractPlusClick = async (type: string) => {
+    SendSignTransaction(info.address, info.pk, type);
+  };
   return (
     <div className="App">
       <header className="App-header">
         <H1>1. Generate Address , PK Key</H1>
-        {address && <p>Address : {address}</p>}
-        {pk && <p>Key : {pk}</p>}
+        {info.address && <p>Address : {info.address}</p>}
+        {info.pk && <p>Key : {info.pk}</p>}
         <button onClick={clickBtn}>generate</button>
         <button onClick={clickReset}>reset</button>
         <HR />
@@ -123,47 +139,54 @@ function App() {
           onChange={inputChange}
         />
         <button onClick={clickPktoAccount}>Import Privatekey </button>
-        {address && (
-          <button onClick={ClickBalanceOf}>Balance ?{balance} </button>
+        {info.address && (
+          <button onClick={ClickBalanceOf}>Balance ?{info.balance} </button>
         )}
         <HR />
         <H1>3. Import Contract to count</H1>
         Contract Address ={" "}
         <input
-          name="contract"
+          name="contactAddress"
           type={"text"}
-          onChange={inputContract}
-          value={contactAddress}
+          onChange={inputChange}
+          value={info.contactAddress}
         />
         <button onClick={contractClick}>contract Input </button>
-        {count}
+        {info.count}
+        <H1>3-1. Contract to Plus & minus</H1>
+        <button onClick={() => contractPlusClick("add")}>
+          ADD Transaction{" "}
+        </button>
+        <button onClick={() => contractPlusClick("minus")}>
+          MINUS Transaction{" "}
+        </button>
         <HR />
         <H1>4. SendSignTransaction</H1>
         <InputWithLabel>
           From.Private Key
           <input
-            name="contract"
+            name="pk"
             type={"text"}
-            value={pk}
+            value={info.pk}
             onChange={inputChange}
           />
         </InputWithLabel>
         <InputWithLabel>
           To.Address
           <input
-            name="contract"
+            name="toAddress"
             type={"text"}
-            value={toAddress}
-            onChange={inputToAddress}
+            value={info.toAddress}
+            onChange={inputChange}
           />
         </InputWithLabel>
         <InputWithLabel>
           Value
           <input
-            name="contract"
+            name="sendBalance"
             type={"text"}
-            onChange={sendSignInput}
-            value={sendAddress}
+            onChange={inputChange}
+            value={info.sendBalance}
           />
         </InputWithLabel>
         <button onClick={sendSignClick}>contract Input </button>
