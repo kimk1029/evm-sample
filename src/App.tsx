@@ -247,9 +247,14 @@ function App() {
         >
           contract Input
         </button>
-        <div style={{ textAlign: "left" }}>
-          -------------------------------------
-          <br />
+        <div
+          style={{
+            textAlign: "left",
+            border: "1px solid white",
+            padding: "20px",
+            margin: "20px",
+          }}
+        >
           <span style={{ opacity: "0.5" }}>balanceOf</span> :{" "}
           {info.erc20.balanceOf} <br />
           <span style={{ opacity: "0.5" }}>decimals</span> :{" "}
