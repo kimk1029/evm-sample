@@ -19,10 +19,12 @@ export const SendSignTransaction = async (
       ? await contract.methods.add()
       : await contract.methods.minus();
   const data = exData.encodeABI();
+
   const estimateGas =
     type === "add"
       ? await contract.methods.add().estimateGas()
-      : await contract.methods.add().estimateGas();
+      : await contract.methods.minus().estimateGas();
+
   const nonce = await web3.eth.getTransactionCount(address);
   const gasObject = await getGasprice();
   const { fast, slow } = gasObject;

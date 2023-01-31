@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
 import CounterABI from "../src/config/abi.json";
+import ERC20ABI from "../src/config/erc20contract.json";
 import styled from "styled-components";
 import { Transaction } from "@ethereumjs/tx";
 import { Chain, Common } from "@ethereumjs/common";
@@ -34,13 +35,18 @@ function App() {
     count: "",
     sendBalance: "",
     toAddress: "0x9F5230608353116ef5d1941C4803e4516A54e23C",
+    erc20: {
+      balanceOf: "",
+      decimals: "",
+      name: "",
+      symbol: "",
+      totalSupply: "",
+    },
   };
   const [info, setInfo] = useState({ ...INITIAL_STATE });
 
   const inputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value, name } = e.target;
-    console.log(value);
-    console.log(name);
     setInfo({
       ...info,
       [name]: value,
@@ -190,6 +196,72 @@ function App() {
           />
         </InputWithLabel>
         <button onClick={sendSignClick}>contract Input </button>
+        <HR />
+        <H1>5. ERC20 Contract</H1>
+        <div style={{ color: "grey", fontSize: "16px" }}>
+          규현: 0x8ed317703Cf0CC7CC4AD3FC41025eDcaE25a9560
+          <br /> 소은: 0x563023174BF4bDc63007043eaE0f1d1Afd9Ae373
+        </div>
+        <InputWithLabel>
+          Contract Addr.
+          <input
+            name="contactAddress"
+            type={"text"}
+            onChange={inputChange}
+            value={info.contactAddress}
+          />
+        </InputWithLabel>
+        <InputWithLabel>
+          Address
+          <input
+            name="address"
+            type={"text"}
+            onChange={inputChange}
+            value={info.address}
+          />
+        </InputWithLabel>
+        <button
+          onClick={async () => {
+            const abi: any = ERC20ABI;
+            const contract = new web3.eth.Contract(abi, info.contactAddress);
+            const balanceOf = await contract.methods
+              .balanceOf("0x9BD4C525eC074CbC6A4906Bb1Bd47E5BE3AFEa79")
+              .call();
+            const decimals = await contract.methods.decimals().call();
+            const name = await contract.methods.name().call();
+            const symbol = await contract.methods.symbol().call();
+            const totalSupply = await contract.methods.totalSupply().call();
+            const result = {
+              balanceOf,
+              decimals,
+              name,
+              symbol,
+              totalSupply,
+            };
+            setInfo({
+              ...info,
+              erc20: result,
+            });
+            console.log(info);
+          }}
+        >
+          contract Input
+        </button>
+        <div style={{ textAlign: "left" }}>
+          -------------------------------------
+          <br />
+          <span style={{ opacity: "0.5" }}>balanceOf</span> :{" "}
+          {info.erc20.balanceOf} <br />
+          <span style={{ opacity: "0.5" }}>decimals</span> :{" "}
+          {info.erc20.decimals}
+          <br />
+          <span style={{ opacity: "0.5" }}>name</span> : {info.erc20.name}
+          <br />
+          <span style={{ opacity: "0.5" }}>symbol</span> : {info.erc20.symbol}
+          <br />
+          <span style={{ opacity: "0.5" }}>totalSupply</span> :{" "}
+          {info.erc20.totalSupply}
+        </div>
       </header>
     </div>
   );
