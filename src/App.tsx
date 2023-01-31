@@ -15,8 +15,15 @@ const HR = styled.hr`
   opacity: 0.1;
 `;
 const H1 = styled.h1`
-  font-size: 42px;
+  font-size: 45px;
   text-decoration: underline;
+  font-weight: bold;
+  text-shadow: 5px 5px #585858;
+`;
+const TitleSpan = styled.span`
+  font-size: 36px;
+  opacity: 0.7;
+  text-transform: capitalize;
 `;
 const InputWithLabel = styled.div`
   display: flex;
@@ -255,17 +262,14 @@ function App() {
             margin: "20px",
           }}
         >
-          <span style={{ opacity: "0.5" }}>balanceOf</span> :{" "}
-          {info.erc20.balanceOf} <br />
-          <span style={{ opacity: "0.5" }}>decimals</span> :{" "}
-          {info.erc20.decimals}
+          <TitleSpan>balanceOf</TitleSpan> : {info.erc20.balanceOf} <br />
+          <TitleSpan>decimals</TitleSpan> : {info.erc20.decimals}
           <br />
-          <span style={{ opacity: "0.5" }}>name</span> : {info.erc20.name}
+          <TitleSpan>name</TitleSpan> : {info.erc20.name}
           <br />
-          <span style={{ opacity: "0.5" }}>symbol</span> : {info.erc20.symbol}
+          <TitleSpan>symbol</TitleSpan> : {info.erc20.symbol}
           <br />
-          <span style={{ opacity: "0.5" }}>totalSupply</span> :{" "}
-          {info.erc20.totalSupply}
+          <TitleSpan>totalSupply</TitleSpan> : {info.erc20.totalSupply}
         </div>
       </header>
     </div>
