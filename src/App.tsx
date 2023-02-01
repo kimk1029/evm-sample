@@ -24,6 +24,7 @@ const TitleSpan = styled.span`
   font-size: 36px;
   opacity: 0.7;
   text-transform: capitalize;
+  display: block;
 `;
 const InputWithLabel = styled.div`
   display: flex;
@@ -150,6 +151,7 @@ function App() {
           type={"text"}
           placeholder={"Private Key"}
           onChange={inputChange}
+          value={info.pk}
         />
         <button onClick={clickPktoAccount}>Import Privatekey </button>
         {info.address && (
@@ -249,10 +251,58 @@ function App() {
               ...info,
               erc20: result,
             });
-            console.log(info);
           }}
         >
           contract Input
+        </button>
+        <button
+          onClick={async () => {
+            const abi: any = ERC20ABI;
+            const contract = new web3.eth.Contract(abi, info.contactAddress);
+            const data = await contract.methods
+              .transfer(info.address, 9999999)
+              .encodeABI();
+            console.log("---");
+            const estimateGas = await contract.methods
+              .transfer(info.address, 9999999)
+              .estimateGas({ from: info.address });
+            console.log(estimateGas);
+            const gasObject = await getGasprice();
+            const { fast, slow } = gasObject;
+            const nonce = await web3.eth.getTransactionCount(info.address);
+            const txObj = {
+              nonce,
+              data,
+              to: info.contactAddress,
+              gasLimit: estimateGas,
+              gasPrice: web3.utils.toHex(
+                web3.utils.toWei(fast.toString(), "gwei")
+              ),
+            };
+            const common = new Common({
+              chain: Chain.Goerli,
+            });
+            const tx = new Transaction(txObj, { common });
+            const privateKey = Buffer.from(info.pk.substring(2), "hex");
+            const signedTx = tx.sign(privateKey);
+            const txSignedSerial = signedTx.serialize();
+            web3.eth
+              .sendSignedTransaction("0x" + txSignedSerial.toString("hex"))
+              .on("receipt", (e) => console.log(e));
+          }}
+        >
+          push input
+        </button>
+        <button
+          onClick={async () => {
+            const abi: any = ERC20ABI;
+            const contract = new web3.eth.Contract(abi, info.contactAddress);
+            const data = await contract.methods
+              .transfer(info.address, 9)
+              .send();
+          }}
+        >
+          push input
         </button>
         <div
           style={{
@@ -262,13 +312,10 @@ function App() {
             margin: "20px",
           }}
         >
-          <TitleSpan>balanceOf</TitleSpan> : {info.erc20.balanceOf} <br />
+          <TitleSpan>balanceOf</TitleSpan> : {info.erc20.balanceOf}
           <TitleSpan>decimals</TitleSpan> : {info.erc20.decimals}
-          <br />
           <TitleSpan>name</TitleSpan> : {info.erc20.name}
-          <br />
           <TitleSpan>symbol</TitleSpan> : {info.erc20.symbol}
-          <br />
           <TitleSpan>totalSupply</TitleSpan> : {info.erc20.totalSupply}
         </div>
       </header>
