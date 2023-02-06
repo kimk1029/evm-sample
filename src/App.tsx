@@ -51,7 +51,9 @@ function App() {
       totalSupply: "",
     },
   };
+  const abi: any = ERC20ABI;
   const [info, setInfo] = useState({ ...INITIAL_STATE });
+  const contract = new web3.eth.Contract(abi, info.contactAddress);
 
   const inputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value, name } = e.target;
@@ -93,6 +95,10 @@ function App() {
   const contractClick = async () => {
     const abi: any = CounterABI;
     const contract = new web3.eth.Contract(abi, info.contactAddress);
+    const gasObject = await getGasprice();
+    const common = new Common({
+      chain: Chain.Goerli,
+    });
     const count = await contract.methods.count().call();
     setInfo({
       ...info,
@@ -136,6 +142,7 @@ function App() {
   const contractPlusClick = async (type: string) => {
     SendSignTransaction(info.address, info.pk, type);
   };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -257,18 +264,14 @@ function App() {
         </button>
         <button
           onClick={async () => {
-            const abi: any = ERC20ABI;
-            const contract = new web3.eth.Contract(abi, info.contactAddress);
             const data = await contract.methods
-              .transfer(info.address, 9999999)
+              .transfer(info.address, info.balance)
               .encodeABI();
-            console.log("---");
             const estimateGas = await contract.methods
-              .transfer(info.address, 9999999)
+              .transfer(info.address, info.balance)
               .estimateGas({ from: info.address });
-            console.log(estimateGas);
             const gasObject = await getGasprice();
-            const { fast, slow } = gasObject;
+            const { fast } = gasObject;
             const nonce = await web3.eth.getTransactionCount(info.address);
             const txObj = {
               nonce,
@@ -295,14 +298,86 @@ function App() {
         </button>
         <button
           onClick={async () => {
-            const abi: any = ERC20ABI;
-            const contract = new web3.eth.Contract(abi, info.contactAddress);
             const data = await contract.methods
-              .transfer(info.address, 9)
-              .send();
+              .transferFrom(info.address, info.toAddress, info.balance)
+              .encodeABI();
+
+            const estimateGas = await contract.methods
+              .transferFrom(info.address, info.toAddress, info.balance)
+              .estimateGas({ from: info.address });
+
+            const gasObject = await getGasprice();
+            const { fast } = gasObject;
+            const nonce = await web3.eth.getTransactionCount(info.address);
+            const txObj = {
+              nonce,
+              data,
+              to: info.contactAddress,
+              gasLimit: estimateGas,
+              gasPrice: web3.utils.toHex(
+                web3.utils.toWei(fast.toString(), "gwei")
+              ),
+            };
+            const common = new Common({
+              chain: Chain.Goerli,
+            });
+            const tx = new Transaction(txObj, { common });
+            const privateKey = Buffer.from(info.pk.substring(2), "hex");
+            const signedTx = tx.sign(privateKey);
+            const txSignedSerial = signedTx.serialize();
+            web3.eth
+              .sendSignedTransaction("0x" + txSignedSerial.toString("hex"))
+              .on("receipt", (e) => console.log(e));
           }}
         >
-          push input
+          transfer from
+        </button>
+        <button
+          onClick={async () => {
+            //address owner , address spender
+            const result = await contract.methods
+              .allowance(info.address, info.toAddress)
+              .call();
+            console.log(result);
+          }}
+        >
+          Allowance
+        </button>
+        <button
+          onClick={async () => {
+            //address owner , address spender
+            const data = await contract.methods
+              .approve(info.toAddress, 100)
+              .encodeABI();
+            const estimateGas = await contract.methods
+              .approve(info.toAddress, 100)
+              .estimateGas({ from: info.address });
+            const gasObject = await getGasprice();
+            const { fast } = gasObject;
+            const nonce = await web3.eth.getTransactionCount(info.address);
+
+            const txObj = {
+              nonce,
+              data,
+              to: info.contactAddress,
+              gasLimit: estimateGas,
+              gasPrice: web3.utils.toHex(
+                web3.utils.toWei(fast.toString(), "gwei")
+              ),
+            };
+            const common = new Common({
+              chain: Chain.Goerli,
+            });
+            const tx = new Transaction(txObj, { common });
+            const privateKey = Buffer.from(info.pk.substring(2), "hex");
+            const signedTx = tx.sign(privateKey);
+            const txSignedSerial = signedTx.serialize();
+            web3.eth
+              .sendSignedTransaction("0x" + txSignedSerial.toString("hex"))
+              .on("receipt", (e) => console.log(e));
+          }}
+        >
+          Approve
         </button>
         <div
           style={{
